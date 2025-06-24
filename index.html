@@ -1,227 +1,28 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icon-192.png">
-  <meta name="theme-color" content="#ffffff">
   <meta charset="UTF-8">
-  <title>装備入力</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>装備</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon.png" type="image/png">
   <style>
     body {
       font-family: sans-serif;
-      margin: 60px 30px 30px 30px;
-      max-width: 100vw;
-      overflow-x: hidden;
-    }
-    .chat-area {
-      max-width: 800px;
-      margin: 0 auto;
       text-align: center;
+      padding: 50px 20px;
     }
-    .word-buttons {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-    .word-button {
-      padding: 10px;
-      border: 1px solid #ccc;
-      text-align: center;
-      cursor: pointer;
-      user-select: none;
-      border-radius: 6px;
-      background-color: white;
-      font-size: 14px;
-      transition: background-color 0.3s;
-      box-sizing: border-box;
-    }
-    .word-button.selected {
-      background: linear-gradient(270deg, #ecdafc, #d6e6fc, #e0f8e0, #fff1d1, #f6c6c6);
-      color: black;
-      font-weight: bold;
-    }
-    .clear-button {
-      border: 2px solid #888;
-    }
-    #chatInput {
-      width: 100%;
-      max-width: 800px;
-      box-sizing: border-box;
-      display: block;
-      margin: 0 auto 10px auto;
-      height: 200px;
-      font-size: 16px;
-      padding: 10px;
-      resize: vertical;
-      line-height: 1.4;
-    }
-    .control-buttons {
+    h1 {
+      font-size: 2rem;
       margin-bottom: 20px;
-      text-align: center;
     }
-    .control-buttons button {
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-      border-radius: 6px;
-      margin: 0 10px;
-    }
-    @media (max-width: 480px) {
-      body {
-        margin: 80px 10px 10px 10px;
-      }
-      .word-button {
-        font-size: 12px;
-        padding: 6px;
-      }
-      #chatInput {
-        font-size: 14px;
-        padding: 8px;
-        height: 150px;
-      }
-      .control-buttons button {
-        font-size: 14px;
-        padding: 8px 16px;
-      }
+    .message {
+      font-size: 1.2rem;
     }
   </style>
 </head>
 <body>
-
-<div class="chat-area">
-  <div class="word-buttons" id="buttonContainer"></div>
-  <textarea id="chatInput" placeholder="ここに装備を入力（改行・手入力可）..." oninput="syncFromInput()"></textarea>
-  <div class="control-buttons">
-    <button onclick="copyToClipboard()">コピー</button>
-  </div>
-</div>
-
-<script>
-  const wordItems = [
-    { label: "4S", value: "4S" }, { label: "5S", value: "5S" },
-    { label: "7S", value: "7S" }, { label: "8S", value: "8S" },
-    { label: "SR", value: "SR" }, { label: "LEATHER", value: "LEATHER" },
-    { label: "1P-SEAT", value: "1P-SEAT" }, { label: "2P-SEAT", value: "2P-SEAT" },
-    { label: "MEMORY", value: "MEMORY" }, { label: "1PD", value: "1PD" },
-    { label: "2PD", value: "2PD" }, { label: "PB", value: "PB" },
-    { label: "DPA", value: "DisplayAudio" }, { label: "NAVI(M)", value: "NAVI(M)" },
-    { label: "NAVI(D)", value: "NAVI(D)" }, { label: "360VIEW", value: "360VIEW" },
-    { label: "BC", value: "BC" }, { label: "THEATER", value: "THEATER" },
-    { label: "C-TV(D)", value: "C-TV(D)" }, { label: "JBL", value: "JBL" },
-    { label: "DM", value: "Digital Inner Mirror" }, { label: "BSM", value: "BlindSpotMonitor" },
-    { label: "HUD", value: "HeadUpDisplay" }, { label: "UniversalStep", value: "UniversalStep" },
-    { label: "3LED", value: "3LED" }, { label: "LED", value: "LED" },
-    { label: "CoolBox", value: "CoolBox" }, { label: "P-CRASH", value: "P-CRASH" },
-    { label: "CMBS", value: "CMBS" }, { label: "SAFETY", value: "SAFETY-SUPPORT" },
-    { label: "BK", value: "BK" }, { label: "AW", value: "AW" },
-    { label: "MAT", value: "MAT" }, { label: "AUDIOLESS", value: "AUDIOLESS" },
-    { label: "MUFFLER", value: "MUFFLER" }
-  ];
-
-  const exclusivePairs = {
-    "4S": ["5S", "7S", "8S"], "5S": ["4S", "7S", "8S"],
-    "7S": ["4S", "5S", "8S"], "8S": ["4S", "5S", "7S"],
-    "1PD": ["2PD"], "2PD": ["1PD"],
-    "1P-SEAT": ["2P-SEAT"], "2P-SEAT": ["1P-SEAT"],
-    "DisplayAudio": ["NAVI(M)", "NAVI(D)", "AUDIOLESS"],
-    "NAVI(M)": ["DisplayAudio", "NAVI(D)", "AUDIOLESS"],
-    "NAVI(D)": ["DisplayAudio", "NAVI(M)", "AUDIOLESS"],
-    "AUDIOLESS": ["DisplayAudio", "NAVI(M)", "NAVI(D)", "JBL"],
-    "JBL": ["AUDIOLESS"],
-    "360VIEW": ["BC"], "BC": ["360VIEW"],
-    "THEATER": ["C-TV(D)"], "C-TV(D)": ["THEATER"],
-    "3LED": ["LED"], "LED": ["3LED"],
-    "P-CRASH": ["CMBS", "SAFETY-SUPPORT"],
-    "CMBS": ["P-CRASH", "SAFETY-SUPPORT"],
-    "SAFETY-SUPPORT": ["P-CRASH", "CMBS"]
-  };
-
-  const selectedWords = new Set();
-  const container = document.getElementById('buttonContainer');
-
-  wordItems.forEach(({ label, value }) => {
-    const btn = document.createElement('div');
-    btn.textContent = label;
-    btn.className = 'word-button';
-    btn.onclick = () => toggleWord(btn, value);
-    btn.id = `btn-${value.replace(/\W/g, '_')}`;
-    container.appendChild(btn);
-  });
-
-  const clearBtn = document.createElement('button');
-  clearBtn.textContent = '全てクリア';
-  clearBtn.className = 'word-button clear-button';
-  clearBtn.onclick = clearAll;
-  container.appendChild(clearBtn);
-
-  function toggleWord(btn, value) {
-    if (btn.classList.contains('selected')) {
-      btn.classList.remove('selected');
-      selectedWords.delete(value);
-    } else {
-      if (exclusivePairs[value]) {
-        for (const conflict of exclusivePairs[value]) {
-          if (selectedWords.has(conflict)) {
-            alert(`「${value}」は「${conflict}」と同時に選択できません`);
-            return;
-          }
-        }
-      }
-      btn.classList.add('selected');
-      selectedWords.add(value);
-    }
-    updateInput();
-  }
-
-  function updateInput() {
-    const input = document.getElementById('chatInput');
-    const currentLines = input.value.split('\n');
-
-    // 手入力部分を残す
-    const manualLines = currentLines.filter(line =>
-      !wordItems.some(item => line.includes(item.value))
-    );
-
-    // 選択された語句のみ追加
-    const selectedLine = wordItems
-      .map(item => item.value)
-      .filter(value => selectedWords.has(value))
-      .join(' ');
-
-    const result = [...manualLines, selectedLine].filter(Boolean).join('\n').trim();
-    input.value = result;
-  }
-
-  function syncFromInput() {
-    const input = document.getElementById('chatInput');
-    const words = input.value.split(/\s+/);
-    selectedWords.clear();
-    wordItems.forEach(({ value }) => {
-      const btn = document.getElementById(`btn-${value.replace(/\W/g, '_')}`);
-      if (words.includes(value)) {
-        selectedWords.add(value);
-        btn.classList.add('selected');
-      } else {
-        btn.classList.remove('selected');
-      }
-    });
-  }
-
-  function clearAll() {
-    selectedWords.clear();
-    document.querySelectorAll('.word-button').forEach(btn => btn.classList.remove('selected'));
-    document.getElementById('chatInput').value = '';
-  }
-
-  function copyToClipboard() {
-    const input = document.getElementById('chatInput');
-    input.select();
-    document.execCommand('copy');
-    alert('コピーしました！');
-  }
-</script>
-
+  <h1>装備 入力ツール</h1>
+  <div class="message">ここにアプリの機能が入ります（既存の装備ボタンUIなど）</div>
 </body>
 </html>

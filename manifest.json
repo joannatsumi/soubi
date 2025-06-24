@@ -1,14 +1,14 @@
 {
-  "name": "装備入力",
+  "name": "装備",
   "short_name": "装備",
-  "start_url": "./soubi.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
   "icons": [
     {
-      "src": "icon-192.png",
-      "sizes": "192x192",
+      "src": "icons/icon.png",
+      "sizes": "512x512",
       "type": "image/png"
     }
   ]
