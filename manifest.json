@@ -1,7 +1,7 @@
 {
   "name": "装備入力",
-  "short_name": "装備入力",
-  "start_url": "./index.html",
+  "short_name": "装備",
+  "start_url": "./soubi.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
@@ -9,11 +9,6 @@
     {
       "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
       "type": "image/png"
     }
   ]
