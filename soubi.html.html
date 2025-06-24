@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>装備入力</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 60px 30px 30px 30px;
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+    .chat-area {
+      max-width: 800px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .word-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .word-button {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+      border-radius: 6px;
+      background-color: white;
+      font-size: 14px;
+      transition: background-color 0.3s;
+      box-sizing: border-box;
+    }
+    .word-button.selected {
+      background: linear-gradient(270deg, #ecdafc, #d6e6fc, #e0f8e0, #fff1d1, #f6c6c6);
+      color: black;
+      font-weight: bold;
+    }
+    .clear-button {
+      border: 2px solid #888;
+    }
+    #chatInput {
+      width: 100%;
+      max-width: 800px;
+      box-sizing: border-box;
+      display: block;
+      margin: 0 auto 10px auto;
+      height: 200px;
+      font-size: 16px;
+      padding: 10px;
+      resize: vertical;
+      line-height: 1.4;
+    }
+    .control-buttons {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .control-buttons button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 6px;
+      margin: 0 10px;
+    }
+    @media (max-width: 480px) {
+      body {
+        margin: 30px 10px 10px 10px;
+      }
+      .word-button {
+        font-size: 12px;
+        padding: 6px;
+      }
+      #chatInput {
+        font-size: 14px;
+        padding: 8px;
+        height: 150px;
+      }
+      .control-buttons button {
+        font-size: 14px;
+        padding: 8px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="chat-area">
+  <div class="word-buttons" id="buttonContainer"></div>
+
+  <textarea id="chatInput" placeholder="ここに装備を入力（改行・手入力可）..." oninput="syncFromInput()"></textarea>
+
+  <div class="control-buttons">
+    <button onclick="copyToClipboard()">コピー</button>
+  </div>
+</div>
+
+<script src="main.js"></script>
+</body>
+</html>
