@@ -86,6 +86,7 @@
   </style>
 </head>
 <body>
+
 <div class="chat-area">
   <div class="word-buttons" id="buttonContainer"></div>
   <textarea id="chatInput" placeholder="ここに装備を入力（改行・手入力可）..." oninput="syncFromInput()"></textarea>
@@ -93,6 +94,7 @@
     <button onclick="copyToClipboard()">コピー</button>
   </div>
 </div>
+
 <script>
   const wordItems = [
     { label: "4S", value: "4S" }, { label: "5S", value: "5S" },
@@ -114,6 +116,7 @@
     { label: "MAT", value: "MAT" }, { label: "AUDIOLESS", value: "AUDIOLESS" },
     { label: "MUFFLER", value: "MUFFLER" }
   ];
+
   const exclusivePairs = {
     "4S": ["5S", "7S", "8S"], "5S": ["4S", "7S", "8S"],
     "7S": ["4S", "5S", "8S"], "8S": ["4S", "5S", "7S"],
@@ -131,8 +134,10 @@
     "CMBS": ["P-CRASH", "SAFETY-SUPPORT"],
     "SAFETY-SUPPORT": ["P-CRASH", "CMBS"]
   };
+
   const selectedWords = new Set();
   const container = document.getElementById('buttonContainer');
+
   wordItems.forEach(({ label, value }) => {
     const btn = document.createElement('div');
     btn.textContent = label;
@@ -141,11 +146,13 @@
     btn.id = `btn-${value.replace(/\W/g, '_')}`;
     container.appendChild(btn);
   });
+
   const clearBtn = document.createElement('button');
   clearBtn.textContent = '全てクリア';
   clearBtn.className = 'word-button clear-button';
   clearBtn.onclick = clearAll;
   container.appendChild(clearBtn);
+
   function toggleWord(btn, value) {
     if (btn.classList.contains('selected')) {
       btn.classList.remove('selected');
@@ -164,19 +171,26 @@
     }
     updateInput();
   }
+
   function updateInput() {
     const input = document.getElementById('chatInput');
     const currentLines = input.value.split('\n');
+
+    // 手入力部分を残す
     const manualLines = currentLines.filter(line =>
       !wordItems.some(item => line.includes(item.value))
     );
+
+    // 選択された語句のみ追加
     const selectedLine = wordItems
       .map(item => item.value)
       .filter(value => selectedWords.has(value))
       .join(' ');
+
     const result = [...manualLines, selectedLine].filter(Boolean).join('\n').trim();
     input.value = result;
   }
+
   function syncFromInput() {
     const input = document.getElementById('chatInput');
     const words = input.value.split(/\s+/);
@@ -191,11 +205,13 @@
       }
     });
   }
+
   function clearAll() {
     selectedWords.clear();
     document.querySelectorAll('.word-button').forEach(btn => btn.classList.remove('selected'));
     document.getElementById('chatInput').value = '';
   }
+
   function copyToClipboard() {
     const input = document.getElementById('chatInput');
     input.select();
@@ -203,5 +219,6 @@
     alert('コピーしました！');
   }
 </script>
+
 </body>
 </html>
