@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -66,22 +65,43 @@
       border-radius: 6px;
       margin: 0 10px;
     }
+    @media (max-width: 480px) {
+      body {
+        margin: 30px 10px 10px 10px;
+      }
+      .word-button {
+        font-size: 12px;
+        padding: 6px;
+      }
+      #chatInput {
+        font-size: 14px;
+        padding: 8px;
+        height: 150px;
+      }
+      .control-buttons button {
+        font-size: 14px;
+        padding: 8px 16px;
+      }
+    }
   </style>
 </head>
 <body>
+
 <div class="chat-area">
   <div class="word-buttons" id="buttonContainer"></div>
+
   <textarea id="chatInput" placeholder="ここに装備を入力（改行・手入力可）..." oninput="syncFromInput()"></textarea>
+
   <div class="control-buttons">
     <button onclick="copyToClipboard()">コピー</button>
   </div>
 </div>
+
 <script>
   const wordItems = [
-    { label: "DM", value: "Digital Inner Mirror" },
-    { label: "BSM", value: "Blind Spot Monitor" },
-    { label: "HUD", value: "HeadUpDisplay" }
+    { label: "BSM", value: "Blind Spot Monitor" }
   ];
+
   const selectedWords = new Set();
   const container = document.getElementById('buttonContainer');
 
@@ -113,14 +133,33 @@
 
   function updateInput() {
     const input = document.getElementById('chatInput');
-    input.value = Array.from(selectedWords).join(' ');
+    const currentText = input.value;
+
+    const lines = currentText.split(/\n+/);
+    const preservedLines = [];
+
+    lines.forEach(line => {
+      const words = line.trim().split(/\s+/).filter(w => w);
+      const manualWords = words.filter(word => !wordItems.some(item => item.value === word));
+      if (manualWords.length > 0) {
+        preservedLines.push(manualWords.join(' '));
+      }
+    });
+
+    const ordered = wordItems.map(item => item.value).filter(value => selectedWords.has(value));
+    if (ordered.length > 0) {
+      preservedLines.push(ordered.join(' '));
+    }
+
+    input.value = preservedLines.join('\n');
   }
 
   function syncFromInput() {
     const input = document.getElementById('chatInput');
-    const splitWords = input.value.split(/\s+/).filter(w => w);
+    const currentText = input.value;
+    const splitWords = currentText.split(/\s+/).filter(w => w);
     selectedWords.clear();
-    wordItems.forEach(({ value }) => {
+    wordItems.forEach(({ label, value }) => {
       const btn = document.getElementById(`btn-${value.replace(/\W/g, '_')}`);
       if (splitWords.includes(value)) {
         btn.classList.add('selected');
@@ -144,5 +183,6 @@
     alert('コピーしました！');
   }
 </script>
+
 </body>
 </html>
