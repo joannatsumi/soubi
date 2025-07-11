@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
@@ -108,10 +107,11 @@
     { label: "BC", value: "BC" }, { label: "THEATER", value: "THEATER" },
     { label: "C-TV(D)", value: "C-TV(D)" }, { label: "JBL", value: "JBL" },
     { label: "DM", value: "Digital Inner Mirror" }, { label: "BSM", value: "BlindSpotMonitor" },
-    { label: "HUD", value: "HeadUpDisplay" }, { label: "UniversalStep", value: "UniversalStep" },
+    { label: "HUD", value: "HeadUpDisplay" },
+    { label: "TEAMMATE", value: "TEAMMATE" },
+    { label: "UniversalStep", value: "UniversalStep" },
     { label: "3LED", value: "3LED" }, { label: "LED", value: "LED" },
-    { label: "CoolBox", value: "CoolBox" }, { label: "P-CRASH", value: "P-CRASH" },
-    { label: "CMBS", value: "CMBS" }, { label: "SAFETY", value: "SAFETY-SUPPORT" },
+    { label: "CoolBox", value: "CoolBox" },
     { label: "BK", value: "BK" }, { label: "AW", value: "AW" },
     { label: "MAT", value: "MAT" }, { label: "AUDIOLESS", value: "AUDIOLESS" },
     { label: "MUFFLER", value: "MUFFLER" }
@@ -129,10 +129,7 @@
     "JBL": ["AUDIOLESS"],
     "360VIEW": ["BC"], "BC": ["360VIEW"],
     "THEATER": ["C-TV(D)"], "C-TV(D)": ["THEATER"],
-    "3LED": ["LED"], "LED": ["3LED"],
-    "P-CRASH": ["CMBS", "SAFETY-SUPPORT"],
-    "CMBS": ["P-CRASH", "SAFETY-SUPPORT"],
-    "SAFETY-SUPPORT": ["P-CRASH", "CMBS"]
+    "3LED": ["LED"], "LED": ["3LED"]
   };
 
   const selectedWords = new Set();
@@ -176,12 +173,10 @@
     const input = document.getElementById('chatInput');
     const currentLines = input.value.split('\n');
 
-    // 手入力部分を残す
     const manualLines = currentLines.filter(line =>
       !wordItems.some(item => line.includes(item.value))
     );
 
-    // 選択された語句のみ追加
     const selectedLine = wordItems
       .map(item => item.value)
       .filter(value => selectedWords.has(value))
