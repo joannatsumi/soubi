@@ -1,90 +1,320 @@
-<!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>Spec Input Tool</title>
-  <link rel="stylesheet" href="soubi.css" />
-  <script defer src="soubi.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 60px 30px 30px 30px;
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+    .chat-area {
+      max-width: 800px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .word-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .word-button {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+      border-radius: 6px;
+      background-color: white;
+      font-size: 14px;
+      transition: background-color 0.3s;
+      box-sizing: border-box;
+    }
+    .word-button.selected {
+      background: linear-gradient(270deg, #ecdafc, #d6e6fc, #e0f8e0, #fff1d1, #f6c6c6);
+      color: black;
+      font-weight: bold;
+    }
+    .clear-button {
+      border: 2px solid #888;
+    }
+    #chatInput {
+      width: 100%;
+      max-width: 800px;
+      box-sizing: border-box;
+      display: block;
+      margin: 0 auto 10px auto;
+      height: 200px;
+      font-size: 16px;
+      padding: 10px;
+      resize: vertical;
+      line-height: 1.4;
+    }
+    .control-buttons {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .control-buttons button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 6px;
+      margin: 0 10px;
+    }
+    @media (max-width: 480px) {
+      body {
+        margin: 80px 10px 10px 10px;
+      }
+      .word-button {
+        font-size: 12px;
+        padding: 6px;
+      }
+      #chatInput {
+        font-size: 14px;
+        padding: 8px;
+        height: 150px;
+      }
+      .control-buttons button {
+        font-size: 14px;
+        padding: 8px 16px;
+      }
+    }
+  </style>
   <!-- English patch (replaces visible Japanese text only) -->
+  <script>
+  (function () {
+    const replacements = new Map([
+      ["装備入力ツール","Spec Input Tool"],
+      ["装備入力","Spec Input"],
+      ["スペック入力","Spec Input"],
+      ["仕様入力","Spec Input"],
+      ["装備を選択してください","Select specs below"],
+      ["必要な装備を選んでください","Select the required specs"],
+      ["下のボタンを押して追加","Tap buttons below to add"],
+      ["手動入力","Manual Input"],
+      ["手動入力欄","Manual Input"],
+      ["自由入力","Free Input"],
+      ["コピー","Copy"],
+      ["全削除","Clear All"],
+      ["削除","Delete Last"],
+      ["クリア","Clear"],
+      ["アンドゥ","Undo"],
+      ["やり直し","Redo"],
+      ["並び替え","Sort"],
+      ["幅を揃える","Align Width"],
+      ["幅を自動調整","Auto Width"],
+      ["コピーしました","Copied!"],
+      ["削除しました","Deleted."],
+      ["最後の項目を削除しました","Deleted the last item."],
+      ["全てクリアしました","Cleared all."],
+      ["重複です","Duplicate."],
+      ["すでに追加されています","Already added."],
+      ["入力してください","Please enter a value."],
+      ["全削除しますか？","Clear all specs?"],
+      ["本当に削除しますか？","Delete this item?"],
+      ["選択中","Selected"],
+      ["結果","Result"],
+      ["装備一覧","Spec List"],
+      ["コピー用テキスト","Text to Copy"]
+    ]);
+    const placeholderReplacements = new Map([
+      ["ここに入力","Type here"],
+      ["手入力で追加","Add manually"],
+      ["検索","Search"]
+    ]);
+
+    function translateTextNodes(root){
+      const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(node){
+        const t=node.nodeValue && node.nodeValue.trim();
+        if(!t) return NodeFilter.FILTER_REJECT;
+        for (const [jp] of replacements){ if(t.includes(jp)) return NodeFilter.FILTER_ACCEPT; }
+        return NodeFilter.FILTER_REJECT;}});
+      const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+      for (const node of nodes){
+        let v=node.nodeValue;
+        for(const [jp,en] of replacements){
+          if(v.includes(jp)) v=v.split(jp).join(en);
+        }
+        node.nodeValue=v;
+      }
+    }
+
+    function translateAttributes(){
+      const all=document.querySelectorAll('[placeholder], input, textarea');
+      for(const el of all){
+        const ph=el.getAttribute('placeholder');
+        if(ph){
+          for(const [jp,en] of placeholderReplacements){
+            if(ph.includes(jp)) el.setAttribute('placeholder', ph.split(jp).join(en));
+          }
+        }
+        const aria=el.getAttribute('aria-label');
+        if(aria){
+          for(const [jp,en] of replacements){
+            if(aria.includes(jp)) el.setAttribute('aria-label', aria.split(jp).join(en));
+          }
+        }
+      }
+    }
+
+    function translateTitle(){
+      if(document.title && /装備|スペック|仕様/.test(document.title)){
+        document.title=document.title
+          .replace(/装備入力ツール/g,"Spec Input Tool")
+          .replace(/装備入力|スペック入力|仕様入力/g,"Spec Input");
+      }
+      document.querySelectorAll('h1,h2,header .title,.page-title').forEach(h=>{
+        if(h.textContent.includes("装備入力ツール"))
+          h.textContent=h.textContent.replace("装備入力ツール","Spec Input Tool");
+        else if(/装備入力|スペック入力|仕様入力/.test(h.textContent))
+          h.textContent=h.textContent.replace(/装備入力|スペック入力|仕様入力/g,"Spec Input");
+      });
+    }
+
+    function run(){
+      translateTitle();
+      translateTextNodes(document.body);
+      translateAttributes();
+    }
+    if(document.readyState==="loading")
+      document.addEventListener("DOMContentLoaded", run);
+    else run();
+  })();
+  </script>
+</head>
+<body>
+
+<div class="chat-area">
+  <div class="word-buttons" id="buttonContainer"></div>
+  <textarea id="chatInput" placeholder="ここに装備を入力（改行・手入力可）..." oninput="syncFromInput()"></textarea>
+  <div class="control-buttons">
+    <button onclick="copyToClipboard()">コピー</button>
+  </div>
+</div>
+
 <script>
-(function () {
-  const replacements = new Map([
-    ["装備入力ツール","Spec Input Tool"],["装備入力","Spec Input"],["スペック入力","Spec Input"],["仕様入力","Spec Input"],
-    ["装備を選択してください","Select specs below"],["必要な装備を選んでください","Select the required specs"],["下のボタンを押して追加","Tap buttons below to add"],
-    ["手動入力","Manual Input"],["手動入力欄","Manual Input"],["自由入力","Free Input"],["コピー","Copy"],["全削除","Clear All"],["削除","Delete Last"],["クリア","Clear"],["アンドゥ","Undo"],["やり直し","Redo"],["並び替え","Sort"],["幅を揃える","Align Width"],["幅を自動調整","Auto Width"],
-    ["コピーしました","Copied!"],["削除しました","Deleted."],["最後の項目を削除しました","Deleted the last item."],["全てクリアしました","Cleared all."],["重複です","Duplicate."],["すでに追加されています","Already added."],["入力してください","Please enter a value."],
-    ["全削除しますか？","Clear all specs?"],["本当に削除しますか？","Delete this item?"],
-    ["選択中","Selected"],["結果","Result"],["装備一覧","Spec List"],["コピー用テキスト","Text to Copy"]
-  ]);
-  const placeholderReplacements = new Map([
-    ["ここに入力","Type here"],["手入力で追加","Add manually"],["検索","Search"]
-  ]);
+  const wordItems = [
+    { label: "4S", value: "4S" }, { label: "5S", value: "5S" },
+    { label: "7S", value: "7S" }, { label: "8S", value: "8S" },
+    { label: "SR", value: "SR" }, { label: "LEATHER", value: "LEATHER" },
+    { label: "1P-SEAT", value: "1P-SEAT" }, { label: "2P-SEAT", value: "2P-SEAT" },
+    { label: "MEMORY", value: "MEMORY" }, { label: "1PD", value: "1PD" },
+    { label: "2PD", value: "2PD" }, { label: "PB", value: "PB" },
+    { label: "DPA", value: "DisplayAudio" }, { label: "NAVI(M)", value: "NAVI(M)" },
+    { label: "NAVI(D)", value: "NAVI(D)" }, { label: "360VIEW", value: "360VIEW" },
+    { label: "BC", value: "BC" }, { label: "THEATER", value: "THEATER" },
+    { label: "C-TV(D)", value: "C-TV(D)" }, { label: "JBL", value: "JBL" },
+    { label: "DM", value: "Digital Inner Mirror" }, { label: "BSM", value: "BlindSpotMonitor" },
+    { label: "HUD", value: "HeadUpDisplay" },
+    { label: "TEAMMATE", value: "TEAMMATE" },
+    { label: "UniversalStep", value: "UniversalStep" },
+    { label: "3LED", value: "3LED" }, { label: "LED", value: "LED" },
+    { label: "CoolBox", value: "CoolBox" },
+    { label: "BK", value: "BK" }, { label: "AW", value: "AW" },
+    { label: "MAT", value: "MAT" }, { label: "AUDIOLESS", value: "AUDIOLESS" },
+    { label: "MUFFLER", value: "MUFFLER" }
+  ];
 
-  function translateTextNodes(root){
-    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(node){
-      const t=node.nodeValue && node.nodeValue.trim(); if(!t) return NodeFilter.FILTER_REJECT;
-      for (const [jp] of replacements){ if(t.includes(jp)) return NodeFilter.FILTER_ACCEPT;}
-      return NodeFilter.FILTER_REJECT;}});
-    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
-    for (const node of nodes){ let v=node.nodeValue; for(const [jp,en] of replacements){ if(v.includes(jp)) v=v.split(jp).join(en);} node.nodeValue=v; }
+  const exclusivePairs = {
+    "4S": ["5S", "7S", "8S"], "5S": ["4S", "7S", "8S"],
+    "7S": ["4S", "5S", "8S"], "8S": ["4S", "5S", "7S"],
+    "1PD": ["2PD"], "2PD": ["1PD"],
+    "1P-SEAT": ["2P-SEAT"], "2P-SEAT": ["1P-SEAT"],
+    "DisplayAudio": ["NAVI(M)", "NAVI(D)", "AUDIOLESS"],
+    "NAVI(M)": ["DisplayAudio", "NAVI(D)", "AUDIOLESS"],
+    "NAVI(D)": ["DisplayAudio", "NAVI(M)", "AUDIOLESS"],
+    "AUDIOLESS": ["DisplayAudio", "NAVI(M)", "NAVI(D)", "JBL"],
+    "JBL": ["AUDIOLESS"],
+    "360VIEW": ["BC"], "BC": ["360VIEW"],
+    "THEATER": ["C-TV(D)"], "C-TV(D)": ["THEATER"],
+    "3LED": ["LED"], "LED": ["3LED"]
+  };
+
+  const selectedWords = new Set();
+  const container = document.getElementById('buttonContainer');
+
+  wordItems.forEach(({ label, value }) => {
+    const btn = document.createElement('div');
+    btn.textContent = label;
+    btn.className = 'word-button';
+    btn.onclick = () => toggleWord(btn, value);
+    btn.id = `btn-${value.replace(/\W/g, '_')}`;
+    container.appendChild(btn);
+  });
+
+  const clearBtn = document.createElement('button');
+  clearBtn.textContent = '全てクリア';
+  clearBtn.className = 'word-button clear-button';
+  clearBtn.onclick = clearAll;
+  container.appendChild(clearBtn);
+
+  function toggleWord(btn, value) {
+    if (btn.classList.contains('selected')) {
+      btn.classList.remove('selected');
+      selectedWords.delete(value);
+    } else {
+      if (exclusivePairs[value]) {
+        for (const conflict of exclusivePairs[value]) {
+          if (selectedWords.has(conflict)) {
+            alert(`「${value}」は「${conflict}」と同時に選択できません`);
+            return;
+          }
+        }
+      }
+      btn.classList.add('selected');
+      selectedWords.add(value);
+    }
+    updateInput();
   }
 
-  function translateAttributes(){
-    const all=document.querySelectorAll('[placeholder], input, textarea');
-    for(const el of all){
-      const ph=el.getAttribute('placeholder');
-      if(ph){ for(const [jp,en] of placeholderReplacements){ if(ph.includes(jp)) el.setAttribute('placeholder', ph.split(jp).join(en));}}
-      const aria=el.getAttribute('aria-label');
-      if(aria){ for(const [jp,en] of replacements){ if(aria.includes(jp)) el.setAttribute('aria-label', aria.split(jp).join(en));}}
-    }
+  function updateInput() {
+    const input = document.getElementById('chatInput');
+    const currentLines = input.value.split('\n');
+
+    const manualLines = currentLines.filter(line =>
+      !wordItems.some(item => line.includes(item.value))
+    );
+
+    const selectedLine = wordItems
+      .map(item => item.value)
+      .filter(value => selectedWords.has(value))
+      .join(' ');
+
+    const result = [...manualLines, selectedLine].filter(Boolean).join('\n').trim();
+    input.value = result;
   }
 
-  function translateTitle(){
-    if(document.title && /装備|スペック|仕様/.test(document.title)){
-      document.title=document.title.replace(/装備入力ツール/g,"Spec Input Tool").replace(/装備入力|スペック入力|仕様入力/g,"Spec Input");
-    }
-    document.querySelectorAll('h1,h2,header .title,.page-title').forEach(h=>{
-      if(h.textContent.includes("装備入力ツール")) h.textContent=h.textContent.replace("装備入力ツール","Spec Input Tool");
-      else if(/装備入力|スペック入力|仕様入力/.test(h.textContent)) h.textContent=h.textContent.replace(/装備入力|スペック入力|仕様入力/g,"Spec Input");
+  function syncFromInput() {
+    const input = document.getElementById('chatInput');
+    const words = input.value.split(/\s+/);
+    selectedWords.clear();
+    wordItems.forEach(({ value }) => {
+      const btn = document.getElementById(`btn-${value.replace(/\W/g, '_')}`);
+      if (words.includes(value)) {
+        selectedWords.add(value);
+        btn.classList.add('selected');
+      } else {
+        btn.classList.remove('selected');
+      }
     });
   }
 
-  function run(){ translateTitle(); translateTextNodes(document.body); translateAttributes(); }
-  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", run); else run();
-})();
+  function clearAll() {
+    selectedWords.clear();
+    document.querySelectorAll('.word-button').forEach(btn => btn.classList.remove('selected'));
+    document.getElementById('chatInput').value = '';
+  }
+
+  function copyToClipboard() {
+    const input = document.getElementById('chatInput');
+    input.select();
+    document.execCommand('copy');
+    alert('コピーしました！');
+  }
 </script>
 
-</head>
-<body>
-  <header>
-    <h1>Spec Input Tool</h1>
-  </header>
-
-  <main>
-    <p>Select specs below</p>
-
-    <div id="button-container"></div>
-
-    <div id="manual-input-area">
-      <label for="manual-input">Manual Input:</label>
-      <input id="manual-input" placeholder="Type here" />
-      <button id="add-button">Add</button>
-    </div>
-
-    <div id="result-area">
-      <h2>Spec List</h2>
-      <textarea id="result-text" readonly placeholder="Text to Copy"></textarea>
-      <div class="controls">
-        <button id="copy-button">Copy</button>
-        <button id="delete-button">Delete Last</button>
-        <button id="clear-button">Clear All</button>
-      </div>
-    </div>
-  </main>
-
-  <footer>
-    <p>© Spec Input Tool</p>
-  </footer>
 </body>
 </html>
