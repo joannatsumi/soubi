@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spec Input Tool</title>
+  <link rel="stylesheet" href="soubi.css" />
+  <script defer src="soubi.js"></script>
+  <!-- English patch (replaces visible Japanese text only) -->
+  <script defer src="soubi_en_patch.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Spec Input Tool</h1>
+  </header>
+
+  <main>
+    <p>Select specs below</p>
+
+    <div id="button-container"></div>
+
+    <div id="manual-input-area">
+      <label for="manual-input">Manual Input:</label>
+      <input id="manual-input" placeholder="Type here" />
+      <button id="add-button">Add</button>
+    </div>
+
+    <div id="result-area">
+      <h2>Spec List</h2>
+      <textarea id="result-text" readonly placeholder="Text to Copy"></textarea>
+      <div class="controls">
+        <button id="copy-button">Copy</button>
+        <button id="delete-button">Delete Last</button>
+        <button id="clear-button">Clear All</button>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>© Spec Input Tool</p>
+  </footer>
+</body>
+</html>
