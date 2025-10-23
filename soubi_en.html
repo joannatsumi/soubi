@@ -5,78 +5,168 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Spec Input Tool</title>
   <style>
-    /* 画面いっぱいで日本語版を表示するためのIFRAMEレイアウト */
     html, body { height: 100%; margin: 0; }
-    #app {
-      width: 100%;
-      height: 100%;
-      border: 0;
-      display: block;
-    }
+    #app { width: 100%; height: 100%; border: 0; display: block; }
   </style>
 </head>
 <body>
-  <!-- 日本語版をそのまま読み込む（見た目・機能は完全に同じ） -->
-  <iframe id="app" src="soubi.html" title="Spec Input Tool"></iframe>
+  <!-- 日本語版をそのまま読み込み（見た目・機能は完全同じ） -->
+  <iframe id="app" src="soubi.html?v=3" title="Spec Input Tool"></iframe>
 
-  <!-- 英語化スクリプト：IFRAME内の「見える日本語」だけ置換 -->
   <script>
-    (function () {
-      const replacements = new Map([
-        ["装備入力ツール","Spec Input Tool"],
-        ["装備入力","Spec Input"],
-        ["スペック入力","Spec Input"],
-        ["仕様入力","Spec Input"],
-        ["装備を選択してください","Select specs below"],
-        ["必要な装備を選んでください","Select the required specs"],
-        ["下のボタンを押して追加","Tap buttons below to add"],
-        ["手動入力","Manual Input"],
-        ["手動入力欄","Manual Input"],
-        ["自由入力","Free Input"],
-        ["コピー","Copy"],
-        ["全削除","Clear All"],
-        ["削除","Delete Last"],
-        ["クリア","Clear"],
-        ["アンドゥ","Undo"],
-        ["やり直し","Redo"],
-        ["並び替え","Sort"],
-        ["幅を揃える","Align Width"],
-        ["幅を自動調整","Auto Width"],
-        ["コピーしました","Copied!"],
-        ["削除しました","Deleted."],
-        ["最後の項目を削除しました","Deleted the last item."],
-        ["全てクリアしました","Cleared all."],
-        ["重複です","Duplicate."],
-        ["すでに追加されています","Already added."],
-        ["入力してください","Please enter a value."],
-        ["全削除しますか？","Clear all specs?"],
-        ["本当に削除しますか？","Delete this item?"],
-        ["選択中","Selected"],
-        ["結果","Result"],
-        ["装備一覧","Spec List"],
-        ["コピー用テキスト","Text to Copy"]
-      ]);
-      const placeholderReplacements = new Map([
-        ["ここに入力","Type here"],
-        ["手入力で追加","Add manually"],
-        ["検索","Search"]
-      ]);
+  (function () {
+    const replacements = new Map([
+      ["装備入力ツール","Spec Input Tool"],
+      ["装備入力","Spec Input"],
+      ["スペック入力","Spec Input"],
+      ["仕様入力","Spec Input"],
+      ["装備を選択してください","Select specs below"],
+      ["必要な装備を選んでください","Select the required specs"],
+      ["下のボタンを押して追加","Tap buttons below to add"],
+      ["手動入力","Manual Input"],
+      ["手動入力欄","Manual Input"],
+      ["自由入力","Free Input"],
+      ["コピー","Copy"],
+      ["全削除","Clear All"],
+      ["削除","Delete Last"],
+      ["クリア","Clear"],
+      ["アンドゥ","Undo"],
+      ["やり直し","Redo"],
+      ["並び替え","Sort"],
+      ["幅を揃える","Align Width"],
+      ["幅を自動調整","Auto Width"],
+      ["コピーしました","Copied!"],
+      ["削除しました","Deleted."],
+      ["最後の項目を削除しました","Deleted the last item."],
+      ["全てクリアしました","Cleared all."],
+      ["重複です","Duplicate."],
+      ["すでに追加されています","Already added."],
+      ["入力してください","Please enter a value."],
+      ["全削除しますか？","Clear all specs?"],
+      ["本当に削除しますか？","Delete this item?"],
+      ["選択中","Selected"],
+      ["結果","Result"],
+      ["装備一覧","Spec List"],
+      ["コピー用テキスト","Text to Copy"]
+    ]);
 
-      function translateIn(doc) {
-        // タイトル（親側も英語に）
-        try {
-          if (doc.title && /装備|スペック|仕様/.test(doc.title)) {
-            doc.title = doc.title
-              .replace(/装備入力ツール/g, "Spec Input Tool")
-              .replace(/装備入力|スペック入力|仕様入力/g, "Spec Input");
+    const placeholderReplacements = new Map([
+      ["ここに入力","Type here"],
+      ["手入力で追加","Add manually"],
+      ["検索","Search"]
+    ]);
+
+    // 文字列置換ユーティリティ
+    function replaceText(str) {
+      if (!str) return str;
+      let out = str;
+      for (const [jp, en] of replacements) {
+        if (out.includes(jp)) out = out.split(jp).join(en);
+      }
+      return out;
+    }
+
+    function translateDoc(doc) {
+      // タイトル（親側も英語に固定）
+      try {
+        if (doc.title) doc.title = replaceText(doc.title);
+        document.title = "Spec Input Tool";
+      } catch (e) {}
+
+      // テキストノード
+      const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+          const t = node.nodeValue && node.nodeValue.trim();
+          if (!t) return NodeFilter.FILTER_REJECT;
+          for (const [jp] of replacements) {
+            if (t.includes(jp)) return NodeFilter.FILTER_ACCEPT;
           }
-          document.title = "Spec Input Tool";
-        } catch (e) {}
+          return NodeFilter.FILTER_REJECT;
+        }
+      });
+      const nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      for (const node of nodes) node.nodeValue = replaceText(node.nodeValue);
 
-        // テキストノード置換
-        const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT, {
-          acceptNode(node) {
-            const t = node.nodeValue && node.nodeValue.trim();
-            if (!t) return NodeFilter.FILTER_REJECT;
-            for (const [jp] of replacements) {
-              if (t.includes(jp)) return NodeFilter.FILTE
+      // placeholder / aria-label
+      const all = doc.querySelectorAll('[placeholder], input, textarea, [aria-label]');
+      for (const el of all) {
+        const ph = el.getAttribute('placeholder');
+        if (ph) {
+          let phOut = ph;
+          for (const [jp, en] of placeholderReplacements) {
+            if (phOut.includes(jp)) phOut = phOut.split(jp).join(en);
+          }
+          if (phOut !== ph) el.setAttribute('placeholder', phOut);
+        }
+        const aria = el.getAttribute('aria-label');
+        if (aria) {
+          const ariaOut = replaceText(aria);
+          if (ariaOut !== aria) el.setAttribute('aria-label', ariaOut);
+        }
+      }
+
+      // 見出しなど
+      doc.querySelectorAll('h1,h2,header .title,.page-title').forEach(h=>{
+        const out = replaceText(h.textContent);
+        if (out !== h.textContent) h.textContent = out;
+      });
+    }
+
+    function attachInterceptors(win) {
+      // alert/confirm/prompt の日本語も翻訳
+      const origAlert = win.alert.bind(win);
+      const origConfirm = win.confirm.bind(win);
+      const origPrompt = win.prompt.bind(win);
+
+      win.alert = (msg) => origAlert(replaceText(String(msg)));
+      win.confirm = (msg) => origConfirm(replaceText(String(msg)));
+      win.prompt = (msg, defVal) => origPrompt(replaceText(String(msg)), defVal);
+
+      // MutationObserver で動的変化を監視して再翻訳
+      const doc = win.document;
+      let pending = false;
+      const observer = new MutationObserver(() => {
+        if (pending) return;
+        pending = true;
+        // ほんの少し待ってから（DOM更新のまとまり後に）
+        win.requestAnimationFrame(() => {
+          try { translateDoc(doc); } finally { pending = false; }
+        });
+      });
+      observer.observe(doc, { childList: true, subtree: true, characterData: true });
+
+      // 入力系の変化で placeholder 等も再確認
+      doc.addEventListener('input', () => translateDoc(doc), true);
+      doc.addEventListener('change', () => translateDoc(doc), true);
+
+      // 初期表示直後・少し遅延でもう一度（遅延レンダリング対策）
+      translateDoc(doc);
+      setTimeout(() => translateDoc(doc), 150);
+      setTimeout(() => translateDoc(doc), 500);
+      setTimeout(() => translateDoc(doc), 1200);
+    }
+
+    const frame = document.getElementById('app');
+    frame.addEventListener('load', () => {
+      try {
+        const doc = frame.contentDocument;
+        const win = frame.contentWindow;
+        if (!doc || !win) return;
+        attachInterceptors(win);
+      } catch (e) {
+        // 読み込み順のズレなどは少し待って再試行
+        setTimeout(() => {
+          try {
+            const doc = frame.contentDocument;
+            const win = frame.contentWindow;
+            if (!doc || !win) return;
+            attachInterceptors(win);
+          } catch {}
+        }, 150);
+      }
+    });
+  })();
+  </script>
+</body>
+</html>
