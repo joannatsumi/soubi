@@ -67,106 +67,16 @@
       ["検索","Search"]
     ]);
 
+    // 🔧 特殊翻訳対応：「〇〇は〇〇と同時に選択できません」→「Cannot select 〇〇 and 〇〇 at once」
     function replaceText(str) {
       if (!str) return str;
       let out = str;
-      for (const [jp, en] of replacements) {
-        if (out.includes(jp)) out = out.split(jp).join(en);
-      }
-      return out;
-    }
 
-    function translateDoc(doc) {
-      try {
-        if (doc.title) doc.title = replaceText(doc.title);
-        document.title = "Spec Input Tool";
-      } catch (e) {}
-
-      const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT, {
-        acceptNode(node) {
-          const t = node.nodeValue && node.nodeValue.trim();
-          if (!t) return NodeFilter.FILTER_REJECT;
-          for (const [jp] of replacements) {
-            if (t.includes(jp)) return NodeFilter.FILTER_ACCEPT;
-          }
-          return NodeFilter.FILTER_REJECT;
-        }
-      });
-      const nodes = [];
-      while (walker.nextNode()) nodes.push(walker.currentNode);
-      for (const node of nodes) node.nodeValue = replaceText(node.nodeValue);
-
-      const all = doc.querySelectorAll('[placeholder], input, textarea, [aria-label]');
-      for (const el of all) {
-        const ph = el.getAttribute('placeholder');
-        if (ph) {
-          let phOut = ph;
-          for (const [jp, en] of placeholderReplacements) {
-            if (phOut.includes(jp)) phOut = phOut.split(jp).join(en);
-          }
-          if (phOut !== ph) el.setAttribute('placeholder', phOut);
-        }
-        const aria = el.getAttribute('aria-label');
-        if (aria) {
-          const ariaOut = replaceText(aria);
-          if (ariaOut !== aria) el.setAttribute('aria-label', ariaOut);
-        }
+      // 特殊パターン：○○は○○と同時に選択できません
+      const simultaneousPattern = /(.*?)は(.*?)と同時に選択できません/;
+      if (simultaneousPattern.test(out)) {
+        out = out.replace(simultaneousPattern, "Cannot select $1 and $2 at once");
       }
 
-      doc.querySelectorAll('h1,h2,header .title,.page-title').forEach(h=>{
-        const out = replaceText(h.textContent);
-        if (out !== h.textContent) h.textContent = out;
-      });
-    }
-
-    function attachInterceptors(win) {
-      const origAlert = win.alert.bind(win);
-      const origConfirm = win.confirm.bind(win);
-      const origPrompt = win.prompt.bind(win);
-
-      win.alert = (msg) => origAlert(replaceText(String(msg)));
-      win.confirm = (msg) => origConfirm(replaceText(String(msg)));
-      win.prompt = (msg, defVal) => origPrompt(replaceText(String(msg)), defVal);
-
-      const doc = win.document;
-      let pending = false;
-      const observer = new MutationObserver(() => {
-        if (pending) return;
-        pending = true;
-        win.requestAnimationFrame(() => {
-          try { translateDoc(doc); } finally { pending = false; }
-        });
-      });
-      observer.observe(doc, { childList: true, subtree: true, characterData: true });
-
-      doc.addEventListener('input', () => translateDoc(doc), true);
-      doc.addEventListener('change', () => translateDoc(doc), true);
-
-      translateDoc(doc);
-      setTimeout(() => translateDoc(doc), 150);
-      setTimeout(() => translateDoc(doc), 500);
-      setTimeout(() => translateDoc(doc), 1200);
-    }
-
-    const frame = document.getElementById('app');
-    frame.addEventListener('load', () => {
-      try {
-        const doc = frame.contentDocument;
-        const win = frame.contentWindow;
-        if (!doc || !win) return;
-        attachInterceptors(win);
-      } catch (e) {
-        setTimeout(() => {
-          try {
-            const doc = frame.contentDocument;
-            const win = frame.contentWindow;
-            if (!doc || !win) return;
-            attachInterceptors(win);
-          } catch {}
-        }, 150);
-      }
-    });
-  })();
-  </script>
-</body>
-</html>
+      // 通常の置換
+      for (const [jp, en] of replacemen
