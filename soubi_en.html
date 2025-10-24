@@ -26,8 +26,8 @@
       ["手動入力","Manual Input"],
       ["手動入力欄","Manual Input"],
       ["自由入力","Free Input"],
-      ["コピー","COPY"],
-      ["全削除","Clear All"],
+      ["コピー","Copy"],
+      ["全削除","CLEAR"],
       ["削除","Delete Last"],
       ["クリア","Clear"],
       ["アンドゥ","Undo"],
@@ -42,8 +42,19 @@
       ["重複です","Duplicate."],
       ["すでに追加されています","Already added."],
       ["入力してください","Please enter a value."],
-      ["全削除しますか？","Clear all specs?"],
-      ["本当に削除しますか？","Delete this item?"],
+      ["全削除しますか？","Do you want to clear all specs?"],
+      ["本当に削除しますか？","Are you sure you want to delete this?"],
+      ["同時に選択できません","Cannot select simultaneously"],
+      ["既に選択されています","Already selected"],
+      ["削除しますか？","Do you want to delete this?"],
+      ["選択肢がありません","No selectable items"],
+      ["追加しました","Added!"],
+      ["有効な入力ではありません","Invalid input."],
+      ["キャンセルされました","Cancelled."],
+      ["選択できません","Cannot select this item."],
+      ["確認","Confirm"],
+      ["はい","Yes"],
+      ["いいえ","No"],
       ["選択中","Selected"],
       ["結果","Result"],
       ["装備一覧","Spec List"],
@@ -56,7 +67,6 @@
       ["検索","Search"]
     ]);
 
-    // 文字列置換ユーティリティ
     function replaceText(str) {
       if (!str) return str;
       let out = str;
@@ -67,13 +77,11 @@
     }
 
     function translateDoc(doc) {
-      // タイトル（親側も英語に固定）
       try {
         if (doc.title) doc.title = replaceText(doc.title);
         document.title = "Spec Input Tool";
       } catch (e) {}
 
-      // テキストノード
       const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT, {
         acceptNode(node) {
           const t = node.nodeValue && node.nodeValue.trim();
@@ -88,7 +96,6 @@
       while (walker.nextNode()) nodes.push(walker.currentNode);
       for (const node of nodes) node.nodeValue = replaceText(node.nodeValue);
 
-      // placeholder / aria-label
       const all = doc.querySelectorAll('[placeholder], input, textarea, [aria-label]');
       for (const el of all) {
         const ph = el.getAttribute('placeholder');
@@ -106,7 +113,6 @@
         }
       }
 
-      // 見出しなど
       doc.querySelectorAll('h1,h2,header .title,.page-title').forEach(h=>{
         const out = replaceText(h.textContent);
         if (out !== h.textContent) h.textContent = out;
@@ -114,7 +120,6 @@
     }
 
     function attachInterceptors(win) {
-      // alert/confirm/prompt の日本語も翻訳
       const origAlert = win.alert.bind(win);
       const origConfirm = win.confirm.bind(win);
       const origPrompt = win.prompt.bind(win);
@@ -123,24 +128,20 @@
       win.confirm = (msg) => origConfirm(replaceText(String(msg)));
       win.prompt = (msg, defVal) => origPrompt(replaceText(String(msg)), defVal);
 
-      // MutationObserver で動的変化を監視して再翻訳
       const doc = win.document;
       let pending = false;
       const observer = new MutationObserver(() => {
         if (pending) return;
         pending = true;
-        // ほんの少し待ってから（DOM更新のまとまり後に）
         win.requestAnimationFrame(() => {
           try { translateDoc(doc); } finally { pending = false; }
         });
       });
       observer.observe(doc, { childList: true, subtree: true, characterData: true });
 
-      // 入力系の変化で placeholder 等も再確認
       doc.addEventListener('input', () => translateDoc(doc), true);
       doc.addEventListener('change', () => translateDoc(doc), true);
 
-      // 初期表示直後・少し遅延でもう一度（遅延レンダリング対策）
       translateDoc(doc);
       setTimeout(() => translateDoc(doc), 150);
       setTimeout(() => translateDoc(doc), 500);
@@ -155,7 +156,6 @@
         if (!doc || !win) return;
         attachInterceptors(win);
       } catch (e) {
-        // 読み込み順のズレなどは少し待って再試行
         setTimeout(() => {
           try {
             const doc = frame.contentDocument;
